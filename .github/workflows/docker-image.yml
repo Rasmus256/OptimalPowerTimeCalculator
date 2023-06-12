@@ -1,0 +1,37 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+env:
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+jobs:
+  build-api:
+    name: build-api
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: rasmus256docker/workdaycounter
+        tags: |
+          type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+    - name: Docker Login
+    # You may pin to the exact commit or the version.
+    # uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+      uses: docker/login-action@v2.2.0
+      with:
+        # Username used to log against the Docker registry
+        username: rasmus256docker
+        # Password or personal access token used to log against the Docker registry
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+
+    - uses: docker/build-push-action@v4
+      with:
+        file: src/api/Dockerfile
+        context: src
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
