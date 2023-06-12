@@ -1,4 +1,3 @@
-networkx
 fastapi
 uvicorn
-cachetools
+numpy 
