@@ -6,7 +6,7 @@ from datetime import date
 app = FastAPI()
 
 @app.get("/api/udafmainframe")
-async def get_reachable_nodes():
+async def get_days_until_out_of_mainframe():
     start = date.today()
     end = date(2040, 7, 24)
 
