@@ -15,7 +15,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: rasmus256docker/workdaycounter
+        images: rasmus256docker/optimalpowertimecalculator
         tags: |
           type=raw,value={{date 'YYYYMMDD-HHmmss'}}
     - name: Docker Login
