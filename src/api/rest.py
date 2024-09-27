@@ -23,7 +23,7 @@ async def get_days_until_out_of_mainframe():
     string_json = requests.get(url).content
     print(string_json)
     contents = json.loads(string_json)
-    FuturePrices = [EnergyPrice(e['time_start'],e['DKK_per_kWh']) for e in contents]
+    FuturePrices = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
     return {'price' :min(FuturePrices, key=lambda r:r.price)}
 
 @app.get("/healthz", status_code=204)
