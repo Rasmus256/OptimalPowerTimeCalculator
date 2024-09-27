@@ -18,7 +18,7 @@ class EnergyPrice:
 async def get_days_until_out_of_mainframe():
     today = date.today()
     
-    url = f'https://www.elprisenligenu.dk/api/v1/prices/{today.year}/{today.month}-{today.day}_DK1.json'
+    url = f'https://www.elprisenligenu.dk/api/v1/prices/{today.year}/{today.month:02d}-{today.day:02d}_DK1.json'
     print(url)
     string_json = requests.get(url).content
     print(string_json)
