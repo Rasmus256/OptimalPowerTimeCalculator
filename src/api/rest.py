@@ -26,8 +26,8 @@ async def get_days_until_out_of_mainframe():
     FuturePrices.extend(todaysprices)
     FuturePrices.extend(tomorrowsprices)
     print(FuturePrices)
-    startTs
-    endTs
+    startTs = 0
+    endTs = 0
     min_sum = float('inf')
     for i in range(len(FuturePrices)-1):
         window_sum = FuturePrices[i].price + test_string[i+1].price
