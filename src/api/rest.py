@@ -21,7 +21,7 @@ async def get_days_until_out_of_mainframe():
 
     todaysprices= getprices(today)
     tomorrowsprices= getprices(tomorrow)
-    FuturePrices [].extend(todaysprices).extend(tomorrowsprices)
+    FuturePrices todaysprices.extend(tomorrowsprices)
 
     return {'price' :min(FuturePrices, key=lambda r:r.price)}
 
