@@ -30,7 +30,7 @@ def getprices(dateToFind):
     string_json = requests.get(url)
     if(string_json.status_code == 200):
         contents = json.loads(string_json.content)
-        retur[EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
+        return [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
     return []
 
 @app.get("/healthz", status_code=204)
