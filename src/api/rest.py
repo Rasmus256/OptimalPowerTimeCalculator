@@ -19,7 +19,7 @@ async def get_days_until_out_of_mainframe():
     print(string_json)
     contents = json.loads(string_json)
     FuturePrices = [EnergyPrice(e,f) for e,f in zip(contents["unix_seconds"],contents["price"])]
-    return {'price' :min(FuturePrices, key=lambda r:r['price'])}
+    return {'price' :min(FuturePrices, key=lambda r:r.price)}
 
 @app.get("/healthz", status_code=204)
 def healthcheck():
