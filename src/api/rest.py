@@ -16,7 +16,7 @@ class EnergyPrice:
         self.price = price
 
 @app.get("/api/next-optimal-hour")
-async def get_days_until_out_of_mainframe():
+async def get_days_until_out_of_mainframe(numHoursToForecast = 2):
     today = date.today()
     tomorrow = today + timedelta(days=1)    
 
@@ -25,7 +25,7 @@ async def get_days_until_out_of_mainframe():
     FuturePrices = []
     FuturePrices.extend(todaysprices)
     FuturePrices.extend(tomorrowsprices)
-    numHoursToForecast = 2
+    
     startTs = 0
     endTs = 0
     min_sum = float('inf')
@@ -37,7 +37,7 @@ async def get_days_until_out_of_mainframe():
             min_sum = window_sum
             startTs = FuturePrices[i].fromTs
             endTs = FuturePrices[i+numHoursToForecast-1].toTs
-    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': min_sum/2}}
+    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': min_sum/numHoursToForecast}}
 
 def getprices(dateToFind):
     url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_DK1.json'
