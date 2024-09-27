@@ -17,7 +17,7 @@ class EnergyPrice:
 @app.get("/api/next-optimal-hour")
 async def get_days_until_out_of_mainframe():
     today = date.today()
-    tomorrow = today + timedelta(day=1)    
+    tomorrow = today + timedelta(days=1)    
 
     todaysprices= getprices(today)
     tomorrowsprices= getprices(tomorrow)
