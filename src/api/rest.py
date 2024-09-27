@@ -32,7 +32,8 @@ def getprices(dateToFind):
     string_json = requests.get(url)
     if(string_json.status_code == 200):
         contents = json.loads(string_json.content)
-        return [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
+        possibleDates = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
+        return [e for e in possibleDates if e.toTs <= datetime.now()]
     return []
 
 @app.get("/healthz", status_code=204)
