@@ -25,7 +25,7 @@ async def get_days_until_out_of_mainframe():
     FuturePrices = []
     FuturePrices.extend(todaysprices)
     FuturePrices.extend(tomorrowsprices)
-
+    print(FuturePrices)
     return {'price' :min(FuturePrices, key=lambda r:r.price)}
 
 def getprices(dateToFind):
@@ -35,6 +35,7 @@ def getprices(dateToFind):
         contents = json.loads(string_json.content)
         possibleDates = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
         utc=pytz.UTC
+        print(possibleDates)
         return [e for e in possibleDates if e.toTs <= utc.localize(datetime.now())]
     return []
 
