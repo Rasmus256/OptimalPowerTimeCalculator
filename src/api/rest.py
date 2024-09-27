@@ -3,6 +3,7 @@ import asyncio
 import requests
 from datetime import datetime, timedelta, date
 import json
+import pytz
 
 today = date.today()
 
@@ -33,7 +34,8 @@ def getprices(dateToFind):
     if(string_json.status_code == 200):
         contents = json.loads(string_json.content)
         possibleDates = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
-        return [e for e in possibleDates if e.toTs <= datetime.now()]
+        utc=pytz.UTC
+        return [e for e in possibleDates if e.toTs <= utc.localize(datetime.now())]
     return []
 
 @app.get("/healthz", status_code=204)
