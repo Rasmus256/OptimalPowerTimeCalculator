@@ -17,14 +17,21 @@ class EnergyPrice:
 @app.get("/api/next-optimal-hour")
 async def get_days_until_out_of_mainframe():
     today = date.today()
-    
-    url = f'https://www.elprisenligenu.dk/api/v1/prices/{today.year}/{today.month:02d}-{today.day:02d}_DK1.json'
-    print(url)
-    string_json = requests.get(url).content
-    print(string_json)
-    contents = json.loads(string_json)
-    FuturePrices = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
+    tomorrow = today + timedelta(day=1)    
+
+    todaysprices= getprices(today)
+    tomorrowsprices= getprices(tomorrow)
+    FuturePrices [].extend(todaysprices).extend(tomorrowsprices)
+
     return {'price' :min(FuturePrices, key=lambda r:r.price)}
+
+def getprices(dateToFind):
+    url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_DK1.json'
+    string_json = requests.get(url)
+    if(string_json.status_code == 200):
+        contents = json.loads(string_json.content)
+        retur[EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
+    return []
 
 @app.get("/healthz", status_code=204)
 def healthcheck():
