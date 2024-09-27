@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 import asyncio
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
+
+today = date.today()
 
 app = FastAPI()
 
@@ -14,11 +16,14 @@ class EnergyPrice:
 
 @app.get("/api/next-optimal-hour")
 async def get_days_until_out_of_mainframe():
-    url = 'https://api.energy-charts.info/price?bzn=DK1'
+    today = date.today()
+    
+    url = f'https://www.elprisenligenu.dk/api/v1/prices/{today.year}/{today.month}-{today.day}_DK1.json'
+    print(url)
     string_json = requests.get(url).content
     print(string_json)
     contents = json.loads(string_json)
-    FuturePrices = [EnergyPrice(e,f) for e,f in zip(contents["unix_seconds"],contents["price"])]
+    FuturePrices = [EnergyPrice(e['time_start'],e['DKK_per_kWh']) for e in contents]
     return {'price' :min(FuturePrices, key=lambda r:r.price)}
 
 @app.get("/healthz", status_code=204)
