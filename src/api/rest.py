@@ -15,7 +15,7 @@ class EnergyPrice:
 @app.get("/api/next-optimal-hour")
 async def get_days_until_out_of_mainframe():
     url = 'https://api.energy-charts.info/price?bzn=DK1'
-    string_json = requests.get(url)
+    string_json = requests.get(url).content
     print(string_json)
     contents = json.loads(string_json)
     FuturePrices = [EnergyPrice(e,f) for e,f in zip(contents["unix_seconds"],contents["price"])]
