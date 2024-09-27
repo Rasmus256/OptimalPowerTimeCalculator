@@ -9,9 +9,9 @@ today = date.today()
 app = FastAPI()
 
 class EnergyPrice:
-    def __init__(self, fromTs, price):
-        self.fromTs = datetime.fromtimestamp(fromTs)
-        self.toTs = self.fromTs + timedelta(hours=1) - timedelta(seconds=1)
+    def __init__(self, fromTs, toTs, price):
+        self.fromTs = datetime.fromisoformat(fromTs)
+        self.toTs = datetime.fromisoformat(toTs) #self.fromTs + timedelta(hours=1) - timedelta(seconds=1)
         self.price = price
 
 @app.get("/api/next-optimal-hour")
