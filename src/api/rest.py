@@ -36,7 +36,7 @@ def getprices(dateToFind):
         possibleDates = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
         utc=pytz.UTC
         print(possibleDates)
-        return [e for e in possibleDates if e.toTs <= utc.localize(datetime.now())]
+        return [e for e in possibleDates if e.toTs >= utc.localize(datetime.now())]
     return []
 
 @app.get("/healthz", status_code=204)
