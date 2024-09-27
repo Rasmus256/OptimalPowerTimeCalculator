@@ -26,7 +26,16 @@ async def get_days_until_out_of_mainframe():
     FuturePrices.extend(todaysprices)
     FuturePrices.extend(tomorrowsprices)
     print(FuturePrices)
-    return {'price' :min(FuturePrices, key=lambda r:r.price)}
+    startTs
+    endTs
+    min_sum = float('inf')
+    for i in range(len(FuturePrices)-1):
+        window_sum = FuturePrices[i].price + test_string[i+1].price
+        if window_sum < min_sum:
+            min_sum = window_sum
+            startTs = FuturePrices[i].fromTs
+            toTs = FuturePrices[i+1].toTs
+    return {'price' : {'fromTs': fromTs, 'toTs': toTs, 'price': min_sum/2}}
 
 def getprices(dateToFind):
     url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_DK1.json'
