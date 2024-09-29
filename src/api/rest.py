@@ -50,8 +50,8 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             window_sum += FuturePrices[i+j].price
         if window_sum < min_sum:
             min_sum = window_sum
-            startTs = i
-            endTs = i+hoursToForecastInclPartial-1
+            startIdx = i
+            endIdx = i+hoursToForecastInclPartial-1
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
     price = 0
     if numMinutesInt>0:
