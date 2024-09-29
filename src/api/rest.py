@@ -61,7 +61,7 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             startTs = FuturePrices[startIdx].fromTs
             endTs = FuturePrices[endIdx-1].toTs + timedelta(minutes=numMinutesInt)
             print(f'looping from {startIdx} to {endIdx}')
-            for i in range(startIdx-1, endIdx):
+            for i in range(startIdx, endIdx):
                 print(i)
                 min_sum += FuturePrices[i].price * 60
             min_sum += FuturePrices[endIdx].price*numMinutesInt
@@ -70,7 +70,7 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             startTs = FuturePrices[startIdx].fromTs +  timedelta(minutes=60-numMinutesInt)
             endTs = FuturePrices[endIdx].toTs
             print(f'looping from {startIdx} to {endIdx}')
-            for i in range(startIdx, endIdx+1):
+            for i in range(startIdx+1, endIdx+1):
                 print(i)
                 min_sum += FuturePrices[i].price * 60
             min_sum += FuturePrices[startIdx].price*(numMinutesInt)
