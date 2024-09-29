@@ -61,24 +61,24 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             startTs = FuturePrices[startIdx].fromTs
             endTs = FuturePrices[endIdx-1].toTs + timedelta(minutes=numMinutesInt)
             print(f'looping from {startIdx} to {endIdx}')
-            for i in range(startIdx, endIdx-1):
+            for i in range(startIdx-1, endIdx):
                 print(i)
                 min_sum += FuturePrices[i].price * 60
-            min_sum += FuturePrices[endIdx-1].price*numMinutesInt
+            min_sum += FuturePrices[endIdx].price*numMinutesInt
             price = min_sum / (numHoursInt*60 + numMinutesInt)
         else:
             startTs = FuturePrices[startIdx].fromTs +  timedelta(minutes=60-numMinutesInt)
             endTs = FuturePrices[endIdx].toTs
             print(f'looping from {startIdx} to {endIdx}')
-            for i in range(startIdx+1, endIdx):
+            for i in range(startIdx, endIdx+1):
                 print(i)
                 min_sum += FuturePrices[i].price * 60
-            min_sum += FuturePrices[endIdx-1].price*(numMinutesInt)
+            min_sum += FuturePrices[startIdx].price*(numMinutesInt)
             price = min_sum / (numHoursInt*60 + numMinutesInt)
     else:
         startTs = FuturePrices[startIdx].fromTs
         endTs = FuturePrices[endIdx].toTs
-        price = min_sum/numHoursToForecast
+        price = min_sum/hoursToForecastInclPartial
     return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price}}
 
 def getprices(dateToFind):
