@@ -57,7 +57,7 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
     if numMinutesInt>0:
         firstHourPrice = FuturePrices[startIdx].price
         lastHourPrice = FuturePrices[endIdx].price
-        if firstHourPrice < lastHourPrice:
+        if firstHourPrice > lastHourPrice:
             startTs = FuturePrices[startIdx].fromTs
             endTs = FuturePrices[endIdx-1].toTs + timedelta(minutes=numMinutesInt)
             for i in range(startIdx, endIdx):
