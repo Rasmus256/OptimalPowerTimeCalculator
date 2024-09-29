@@ -61,9 +61,9 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             startTs = FuturePrices[startIdx].fromTs
             endTs = FuturePrices[endIdx-1].toTs + timedelta(minutes=numMinutesInt)
             for i in range(startIdx, endIdx):
-                print(f'Whole hour: {FuturePrices[i].startTs}')
+                print(f'Whole hour: {FuturePrices[i].fromTs}')
                 min_sum += FuturePrices[i].price * 60
-            print(f'Parti hour: {FuturePrices[endIdx].startTs}')
+            print(f'Parti hour: {FuturePrices[endIdx].fromTs}')
             min_sum += FuturePrices[endIdx].price*numMinutesInt
             price = min_sum / (numHoursInt*60 + numMinutesInt)
         else:
@@ -71,9 +71,9 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             endTs = FuturePrices[endIdx].toTs
             print(f'looping from {startIdx} to {endIdx}')
             for i in range(startIdx+1, endIdx+1):
-                print(f'Whole hour: {FuturePrices[i].startTs}')
+                print(f'Whole hour: {FuturePrices[i].fromTs}')
                 min_sum += FuturePrices[i].price * 60
-            print(f'Parti hour: {FuturePrices[startIdx].startTs}')
+            print(f'Parti hour: {FuturePrices[startIdx].fromTs}')
             min_sum += FuturePrices[startIdx].price*(numMinutesInt)
             price = min_sum / (numHoursInt*60 + numMinutesInt)
     else:
