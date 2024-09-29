@@ -63,11 +63,6 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             print('First hour is the least expensive')
             startTs = min([e.fromTs for e in FuturePrices])
             endTs = partialHour.fromTs + timedelta(minutes=numMinutesInt)
-            for fullHour in fullHours:
-                print(fullHour)
-                min_sum += fullHour.price
-            print(f'Partial hour: {partialHour}')
-            min_sum += partialHour.price*(numHoursInt/60)
 
         else:
             fullHours = FuturePrices[startIdx+1:endIdx+1]
@@ -75,12 +70,12 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             print('Last hour is least expensive')
             startTs = partialHour.toTs - timedelta(minutes=numMinutesInt)
             endTs = max([e.toTs for e in FuturePrices])
-            for fullHour in fullHours:
-                print(fullHour)
-                min_sum += fullHour.price
-            print(f'Partial hour: {partialHour}')
-            min_sum += partialHour.price*(numHoursInt/60)
-            
+
+        for fullHour in fullHours:
+            print(fullHour)
+            min_sum += fullHour.price
+        print(f'Partial hour: {partialHour}')
+        min_sum += partialHour.price*(numHoursInt/60)
         price = min_sum / (numHoursInt + numMinutesInt/60)
     else:
         startTs = FuturePrices[startIdx].fromTs
