@@ -57,6 +57,7 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
     price = 0
     if numMinutesInt>0:
+        partialPriceSum = 0
         if FuturePrices[startIdx].price <= FuturePrices[endIdx].price:
             fullHours = FuturePrices[startIdx:endIdx]
             partialHour = FuturePrices[endIdx]
@@ -75,10 +76,10 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
 
         for fullHour in fullHours:
             print(fullHour)
-            min_sum += fullHour.price
+            partialPriceSum += fullHour.price
         print(f'Partial hour: {partialHour}')
-        min_sum += partialHour.price*(numHoursInt/60)
-        price = min_sum / (numHoursInt + numMinutesInt/60)
+        partialPriceSum += partialHour.price*(numHoursInt/60)
+        price = partialPriceSum / (numHoursInt + numMinutesInt/60)
     else:
         startTs = FuturePrices[startIdx].fromTs
         endTs = FuturePrices[endIdx].toTs
