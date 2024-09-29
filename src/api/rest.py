@@ -19,15 +19,10 @@ class EnergyPrice:
     def __str__(self):
         return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
 
-@app.get("/api/next-optimal-hour")
-async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
+def getFuturePrices():
     global cachedPrices
-    hoursString = numHoursToForecast.split('h')[0]
-    minuteString = numHoursToForecast.split('h')[1].split('m')[0]
-    numHoursInt = int(hoursString)
-    numMinutesInt = int(minuteString)
     today = date.today()
-    tomorrow = today + timedelta(days=1)    
+    tomorrow = today + timedelta(days=1)
     if not today.strftime('%m/%d/%Y') in cachedPrices:
       cachedPrices[today.strftime('%m/%d/%Y')]= getprices(today)
     if not tomorrow.strftime('%m/%d/%Y') in cachedPrices:
@@ -39,10 +34,7 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
     utc=pytz.UTC
     FuturePrices = [e for e in FuturePrices if e.toTs >= utc.localize(datetime.now())]
 
-    hoursToForecastInclPartial = numHoursInt
-    if numMinutesInt > 0:
-        hoursToForecastInclPartial+=1
-    
+def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
     startIdx = 0
     endIdx = 0
     min_sum = float('inf')
@@ -54,29 +46,40 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
             min_sum = window_sum
             startIdx = i
             endIdx = i+hoursToForecastInclPartial-1
+    return startIdx, endIdx
+
+
+@app.get("/api/next-optimal-hour")
+async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
+    hoursString = numHoursToForecast.split('h')[0]
+    minuteString = numHoursToForecast.split('h')[1].split('m')[0]
+    numHoursInt = int(hoursString)
+    numMinutesInt = int(minuteString)
+    hoursToForecastInclPartial = numHoursInt
+    if numMinutesInt > 0:
+        hoursToForecastInclPartial+=1
+
+    FuturePrices = getFuturePrices()
+    startIdx, endIdx = determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices)
+
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
     price = 0
     if numMinutesInt>0:
-        partialPriceSum = 0
+        allHours = FuturePrices[startIdx:endIdx+1]
         if FuturePrices[startIdx].price <= FuturePrices[endIdx].price:
-            fullHours = FuturePrices[startIdx:endIdx]
-            partialHour = FuturePrices[endIdx]
-            allHours = FuturePrices[startIdx:endIdx+1]
-            print('First hour is the least expensive')
+            print(f'First hour is the least expensive. Using this as a full hour and taking partial from the end {allHours[-1]}')
+            fullHours = allHours[:-1]
+            partialHour = allHours[-1]
             startTs = min([e.fromTs for e in allHours])
             endTs = partialHour.fromTs + timedelta(minutes=numMinutesInt)
-
         else:
-            allHours = FuturePrices[startIdx:endIdx+1]
-            fullHours = FuturePrices[startIdx+1:endIdx+1]
-            partialHour = FuturePrices[startIdx]
-            print('Last hour is least expensive')
+            print(f'First hour is the least expensive. Using this as a full hour and taking partial hour from the first {allHours[0]}')
+            fullHours = allHours[1:]
+            partialHour = allHours[0]
             startTs = partialHour.toTs - timedelta(minutes=numMinutesInt)
             endTs = max([e.toTs for e in allHours])
 
-        for fullHour in fullHours:
-            print(fullHour)
-            partialPriceSum += fullHour.price
+        partialPriceSum = sum([fullHour.price for fullHour in fullHours])
         print(f'Partial hour: {partialHour}')
         partialPriceSum += partialHour.price*(numHoursInt/60)
         price = partialPriceSum / (numHoursInt + numMinutesInt/60)
