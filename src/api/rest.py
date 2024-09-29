@@ -17,7 +17,7 @@ class EnergyPrice:
         self.toTs = datetime.fromisoformat(toTs) #self.fromTs + timedelta(hours=1) - timedelta(seconds=1)
         self.price = price
     def __str__(self):
-        return self.fromTs + " " + self.toTs + " " + self.price
+        return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
 
 @app.get("/api/next-optimal-hour")
 async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
