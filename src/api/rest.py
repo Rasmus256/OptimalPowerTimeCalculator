@@ -87,7 +87,7 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
         fullHours = FuturePrices[startIdx:endIdx+1]
         startTs = min([e.fromTs for e in fullHours])
         endTs = max([e.toTs for e in fullHours])
-        price = avg([e.price for e in fullHours])
+        price = sum([e.price for e in fullHours]) / len(fullHours)
     return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price}}
 
 def getprices(dateToFind):
