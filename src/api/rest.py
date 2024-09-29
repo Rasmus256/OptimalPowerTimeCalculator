@@ -60,16 +60,18 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
         if FuturePrices[startIdx].price < FuturePrices[endIdx].price:
             fullHours = FuturePrices[startIdx:endIdx]
             partialHour = FuturePrices[endIdx]
+            allHours = FuturePrices[startIdx:endIdx+1]
             print('First hour is the least expensive')
-            startTs = min([e.fromTs for e in fullHours])
+            startTs = min([e.fromTs for e in allHours])
             endTs = partialHour.fromTs + timedelta(minutes=numMinutesInt)
 
         else:
+            allHours = FuturePrices[startIdx:endIdx+1]
             fullHours = FuturePrices[startIdx+1:endIdx+1]
             partialHour = FuturePrices[startIdx]
             print('Last hour is least expensive')
             startTs = partialHour.toTs - timedelta(minutes=numMinutesInt)
-            endTs = max([e.toTs for e in fullHours])
+            endTs = max([e.toTs for e in allHours])
 
         for fullHour in fullHours:
             print(fullHour)
