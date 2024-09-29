@@ -16,6 +16,8 @@ class EnergyPrice:
         self.fromTs = datetime.fromisoformat(fromTs)
         self.toTs = datetime.fromisoformat(toTs) #self.fromTs + timedelta(hours=1) - timedelta(seconds=1)
         self.price = price
+    def __str__(self):
+        return self.fromTs + " " + self.toTs + " " + self.price
 
 @app.get("/api/next-optimal-hour")
 async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
@@ -55,27 +57,31 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
     price = 0
     if numMinutesInt>0:
-        firstHourPrice = FuturePrices[startIdx].price
-        lastHourPrice = FuturePrices[endIdx].price
-        if firstHourPrice > lastHourPrice:
-            startTs = FuturePrices[startIdx].fromTs
-            endTs = FuturePrices[endIdx-1].toTs + timedelta(minutes=numMinutesInt)
-            for i in range(startIdx, endIdx):
-                print(f'Whole hour: {FuturePrices[i].fromTs}')
-                min_sum += FuturePrices[i].price * 60
-            print(f'Parti hour: {FuturePrices[endIdx].fromTs}')
-            min_sum += FuturePrices[endIdx].price*numMinutesInt
-            price = min_sum / (numHoursInt*60 + numMinutesInt)
+        if firstHourPrice < lastHourPrice:
+            fullHours = FuturePrices[startIdx:endIdx]
+            partialHour = FuturePrices[endIdx]
+            print('First hour is the least expensive')
+            startTs = min([e.fromTs for e in FuturePrices])
+            endTs = partialHour.fromTs + timedelta(minutes=numMinutesInt)
+            for fullHour in fullHours:
+                print(fullHour)
+                min_sum += fullHour.price
+            print(f'Partial hour: {partialHour}')
+            min_sum += partialHour.price*(numHoursInt/60)
+
         else:
-            startTs = FuturePrices[startIdx].fromTs +  timedelta(minutes=60-numMinutesInt)
-            endTs = FuturePrices[endIdx].toTs
-            print(f'looping from {startIdx} to {endIdx}')
-            for i in range(startIdx+1, endIdx+1):
-                print(f'Whole hour: {FuturePrices[i].fromTs}')
-                min_sum += FuturePrices[i].price * 60
-            print(f'Parti hour: {FuturePrices[startIdx].fromTs}')
-            min_sum += FuturePrices[startIdx].price*(numMinutesInt)
-            price = min_sum / (numHoursInt*60 + numMinutesInt)
+            fullHours = FuturePrices[startIdx+1:endIdx+1]
+            partialHour = FuturePrices[startIdx]
+            print('Last hour is least expensive')
+            startTs = partialHour.toTs - timedelta(minutes=numMinutesInt)
+            endTs = max([e.toTs for e in FuturePrices])
+            for fullHour in fullHours:
+                print(fullHour)
+                min_sum += fullHour.price
+            print(f'Partial hour: {partialHour}')
+            min_sum += partialHour.price*(numHoursInt/60)
+            
+        price = min_sum / (numHoursInt + numMinutesInt/60)
     else:
         startTs = FuturePrices[startIdx].fromTs
         endTs = FuturePrices[endIdx].toTs
