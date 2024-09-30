@@ -93,7 +93,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '2h35
 
 def getprices(dateToFind):
     price_class = os.getenv('PRICE_CLASS')
-    if price_class is None or price_class = '':
+    if price_class is None or price_class == '':
         print("INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'")
     url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_{price_class}.json'
     string_json = requests.get(url)
