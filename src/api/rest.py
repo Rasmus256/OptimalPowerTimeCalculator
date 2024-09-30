@@ -51,7 +51,7 @@ def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
 
 
 @app.get("/api/next-optimal-hour")
-async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
+async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '2h35m'):
     hoursString = numHoursToForecast.split('h')[0]
     minuteString = numHoursToForecast.split('h')[1].split('m')[0]
     numHoursInt = int(hoursString)
