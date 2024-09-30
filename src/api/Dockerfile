@@ -1,7 +1,6 @@
 FROM  python:3.13.0rc2-slim
 
 COPY api/ ./api
-COPY lib/ ./lib
 
 RUN pip install -r ./api/requirements.txt
 
