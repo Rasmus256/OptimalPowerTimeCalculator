@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timedelta, date
 import json
 import pytz
+import os
 
 today = date.today()
 
@@ -88,10 +89,13 @@ async def get_days_until_out_of_mainframe(numHoursToForecast = '2h35m'):
         startTs = min([e.fromTs for e in fullHours])
         endTs = max([e.toTs for e in fullHours])
         price = sum([e.price for e in fullHours]) / len(fullHours)
-    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price}}
+    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
 
 def getprices(dateToFind):
-    url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_DK1.json'
+    price_class = os.getenv('PRICE_CLASS')
+    if price_class is None or price_class = '':
+        print("INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'")
+    url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_{price_class}.json'
     string_json = requests.get(url)
     if(string_json.status_code == 200):
         contents = json.loads(string_json.content)
