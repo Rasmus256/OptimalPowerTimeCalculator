@@ -79,7 +79,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
             startTs = min([e.fromTs for e in allHours])
             endTs = partialHour.fromTs + timedelta(minutes=numMinutesInt)
         else:
-            print(f'First hour is the least expensive. Using this as a full hour and taking partial hour from the first {allHours[0]}')
+            print(f'Last hour is the least expensive. Using this as a full hour and taking partial hour from the first {allHours[0]}')
             fullHours = allHours[1:]
             partialHour = allHours[0]
             startTs = partialHour.toTs - timedelta(minutes=numMinutesInt)
