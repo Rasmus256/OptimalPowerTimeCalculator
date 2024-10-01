@@ -51,7 +51,7 @@ def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
 
 
 @app.get("/api/next-optimal-hour")
-async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', price_class):
+async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', price_class= None):
     if price_class is None:
         price_class = os.getenv('PRICE_CLASS')
     if not (price_class == 'DK1' or price_class == 'DK2'):
