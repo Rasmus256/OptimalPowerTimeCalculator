@@ -30,8 +30,8 @@ def getFuturePrices(price_class):
       cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')]= getprices(tomorrow, price_class)
 
     FuturePrices = []
-    FuturePrices.extend(cachedPrices[today.strftime('%m/%d/%Y')])
-    FuturePrices.extend(cachedPrices[tomorrow.strftime('%m/%d/%Y')])
+    FuturePrices.extend(cachedPrices[str(price_class)+"_"+today.strftime('%m/%d/%Y')])
+    FuturePrices.extend(cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')])
     utc=pytz.UTC
     return [e for e in FuturePrices if e.toTs >= utc.localize(datetime.now())]
 
