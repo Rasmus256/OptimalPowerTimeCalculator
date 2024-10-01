@@ -85,6 +85,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '2h35
         partialPriceSum += partialHour.price*(numHoursInt/60)
         price = partialPriceSum / (numHoursInt + numMinutesInt/60)
     else:
+        print(f"asked to present full hours only. Looking between these hours: {FuturePrices[startIdx]} and {FuturePrices[endIdx]}")
         fullHours = FuturePrices[startIdx:endIdx+1]
         startTs = min([e.fromTs for e in fullHours])
         endTs = max([e.toTs for e in fullHours])
