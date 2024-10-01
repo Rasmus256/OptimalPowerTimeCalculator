@@ -51,10 +51,10 @@ def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
 
 
 @app.get("/api/next-optimal-hour")
-async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', price_class= None):
-    if price_class is None:
-        price_class = os.getenv('PRICE_CLASS')
-    if not (price_class == 'DK1' or price_class == 'DK2'):
+async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', priceClass= None):
+    if priceClass is None:
+        priceClass = os.getenv('PRICE_CLASS')
+    if not (priceClass == 'DK1' or priceClass == 'DK2'):
         return {'errorCode': "INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'"}
 
     hoursString = numHoursToForecast.split('h')[0]
@@ -65,7 +65,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
     if numMinutesInt > 0:
         hoursToForecastInclPartial+=1
 
-    FuturePrices = getFuturePrices(price_class)
+    FuturePrices = getFuturePrices(priceClass)
     startIdx, endIdx = determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices)
 
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
