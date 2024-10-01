@@ -20,14 +20,14 @@ class EnergyPrice:
     def __str__(self):
         return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
 
-def getFuturePrices():
+def getFuturePrices(price_class):
     global cachedPrices
     today = date.today()
     tomorrow = today + timedelta(days=1)
-    if not today.strftime('%m/%d/%Y') in cachedPrices:
-      cachedPrices[today.strftime('%m/%d/%Y')]= getprices(today)
-    if not tomorrow.strftime('%m/%d/%Y') in cachedPrices:
-      cachedPrices[tomorrow.strftime('%m/%d/%Y')]= getprices(tomorrow)
+    if not str(price_class)+"_"+today.strftime('%m/%d/%Y') in cachedPrices:
+      cachedPrices[str(price_class)+"_"+today.strftime('%m/%d/%Y')]= getprices(today, price_class)
+    if not str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y') in cachedPrices:
+      cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')]= getprices(tomorrow, price_class)
 
     FuturePrices = []
     FuturePrices.extend(cachedPrices[today.strftime('%m/%d/%Y')])
@@ -54,7 +54,7 @@ def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
 async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', price_class):
     if price_class is None:
         price_class = os.getenv('PRICE_CLASS')
-    if price_class is None or price_class == '':
+    if not (price_class == 'DK1' or price_class == 'DK2'):
         return {'errorCode': "INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'"}
 
     hoursString = numHoursToForecast.split('h')[0]
@@ -65,7 +65,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
     if numMinutesInt > 0:
         hoursToForecastInclPartial+=1
 
-    FuturePrices = getFuturePrices()
+    FuturePrices = getFuturePrices(price_class)
     startIdx, endIdx = determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices)
 
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
@@ -97,7 +97,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         price = sum([e.price for e in fullHours]) / len(fullHours)
     return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
 
-def getprices(dateToFind):
+def getprices(dateToFind, price_class):
     url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_{price_class}.json'
     string_json = requests.get(url)
     if(string_json.status_code == 200):
