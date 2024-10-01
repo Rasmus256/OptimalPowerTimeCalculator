@@ -51,7 +51,12 @@ def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
 
 
 @app.get("/api/next-optimal-hour")
-async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '2h35m'):
+async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', price_class):
+    if price_class is None:
+        price_class = os.getenv('PRICE_CLASS')
+    if price_class is None or price_class == '':
+        return {'errorCode': "INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'"}
+
     hoursString = numHoursToForecast.split('h')[0]
     minuteString = numHoursToForecast.split('h')[1].split('m')[0]
     numHoursInt = int(hoursString)
@@ -93,9 +98,6 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '2h35
     return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
 
 def getprices(dateToFind):
-    price_class = os.getenv('PRICE_CLASS')
-    if price_class is None or price_class == '':
-        print("INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'")
     url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_{price_class}.json'
     string_json = requests.get(url)
     if(string_json.status_code == 200):
