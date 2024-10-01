@@ -102,6 +102,8 @@ def getprices(dateToFind):
         contents = json.loads(string_json.content)
         possibleDates = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
         return possibleDates
+    else:
+        print(f"Unable to fetch energy prices for {str(dateToFind)}. Got statuscode {string_json.status_code}")
     return []
 
 @app.get("/healthz", status_code=204)
