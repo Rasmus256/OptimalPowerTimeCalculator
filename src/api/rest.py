@@ -95,7 +95,26 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         startTs = min([e.fromTs for e in fullHours])
         endTs = max([e.toTs for e in fullHours])
         price = sum([e.price for e in fullHours]) / len(fullHours)
-    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
+        priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
+    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPrice': priceIfImpatient}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
+
+def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
+    numberOfMinutesLeftInCurrentHour = 60 - date.today().minute()
+    totalPrice = numberOfMinutesLeftInCurrentHour * FuturePrices[0].price / 60
+    numberOfMinutes -= numberOfMinutesLeftInCurrentHour
+    i = 1
+    while numberOfMinutes > 0 i < len(FuturePrices):
+        if numberOfMinutes > 60:
+            totalPrice += FuturePrices[i].price
+            numberOfMinutes -= 60
+            i++
+        else:
+            totalPrice += FuturePrices[i].price * numberOfMinutes / 60
+            numberOfMinutes = 0
+    return totalPrice        
+    
+    
+    
 
 def getprices(dateToFind, price_class):
     url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_{price_class}.json'
