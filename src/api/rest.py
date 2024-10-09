@@ -32,7 +32,7 @@ def getFuturePrices(price_class):
     FuturePrices = []
     FuturePrices.extend(cachedPrices[str(price_class)+"_"+today.strftime('%m/%d/%Y')])
     FuturePrices.extend(cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')])
-    return [e for e in FuturePrices if e.toTs >= datetime.now(datetime.timezone.utc)]
+    return [e for e in FuturePrices if e.toTs >= datetime.now(timezone.utc)]
 
 def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
     startIdx = 0
