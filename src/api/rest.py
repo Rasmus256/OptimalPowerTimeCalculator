@@ -92,8 +92,8 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
     else:
         print(f"asked to present full hours only. Looking between these hours: {FuturePrices[startIdx]} and {FuturePrices[endIdx]}")
         fullHours = FuturePrices[startIdx:endIdx+1]
-        startTs = min([e.fromTs for e in fullHours]).astimezone(pytz.utc)
-        endTs = max([e.toTs for e in fullHours]).astimezone(pytz.utc)
+        startTs = datetime.fromtimestamp((min([e.fromTs for e in fullHours])).timestamp(), tz=timezone.utc)
+        endTs =   datetime.fromtimestamp((max([e.toTs   for e in fullHours])).timestamp(), tz=timezone.utc)
         price = sum([e.price for e in fullHours]) / len(fullHours)
         priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
     return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
