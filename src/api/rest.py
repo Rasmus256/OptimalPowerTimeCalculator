@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import asyncio
 import requests
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 import json
 import pytz
 import os
@@ -14,8 +14,8 @@ cachedPrices = {}
 
 class EnergyPrice:
     def __init__(self, fromTs, toTs, price):
-        self.fromTs = datetime.fromisoformat(fromTs)
-        self.toTs = datetime.fromisoformat(toTs)
+        self.fromTs = pytz.UTC.localize(datetime.fromisoformat(fromTs))
+        self.toTs = pytz.UTC.localize(datetime.fromisoformat(toTs))
         self.price = price
     def __str__(self):
         return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
@@ -33,7 +33,7 @@ def getFuturePrices(price_class):
     FuturePrices.extend(cachedPrices[str(price_class)+"_"+today.strftime('%m/%d/%Y')])
     FuturePrices.extend(cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')])
     utc=pytz.UTC
-    return [e for e in FuturePrices if e.toTs >= utc.localize(datetime.now())]
+    return [e for e in FuturePrices if e.toTs >= datetime.now(datetime.timezone.utc)]
 
 def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
     startIdx = 0
