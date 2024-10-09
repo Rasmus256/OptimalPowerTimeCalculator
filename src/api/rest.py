@@ -97,7 +97,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         endTs = max([e.toTs for e in fullHours])
         price = sum([e.price for e in fullHours]) / len(fullHours)
         priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
-    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient/(numHoursInt*60+numMinutesInt)}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
+    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
 
 def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
     numberOfMinutesLeftInCurrentHour = 60 - datetime.today().minute
