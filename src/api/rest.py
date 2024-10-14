@@ -113,6 +113,7 @@ def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
         else:
             totalPrice += FuturePrices[i].price * numberOfMinutes / 60
             numberOfMinutes = 0
+            i+=1
     return totalPrice        
     
     
