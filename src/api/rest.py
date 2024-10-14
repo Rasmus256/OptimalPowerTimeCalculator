@@ -66,7 +66,8 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
 
     FuturePrices = getFuturePrices(priceClass)
     startIdx, endIdx = determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices)
-
+    print(startIdx)
+    print(endIdx)
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
     price = 0
     if numMinutesInt>0:
