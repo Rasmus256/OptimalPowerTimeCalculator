@@ -1,4 +1,4 @@
-fastapi ==0.115.0
+fastapi ==0.115.2
 uvicorn ==0.32.0
 cachetools ==5.5.0
 requests
