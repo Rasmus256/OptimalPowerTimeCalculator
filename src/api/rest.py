@@ -26,7 +26,7 @@ def getFuturePrices(price_class):
     tomorrow = today + timedelta(days=1)
     if not str(price_class)+"_"+today.strftime('%m/%d/%Y') in cachedPrices:
       cachedPrices[str(price_class)+"_"+today.strftime('%m/%d/%Y')]= getprices(today, price_class)
-    if not str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y') in cachedPrices:
+    if (not str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y') in cachedPrices) or (not cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')]):
       cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')]= getprices(tomorrow, price_class)
 
     FuturePrices = []
