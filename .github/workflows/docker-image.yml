@@ -18,6 +18,11 @@ jobs:
         images: rasmus256docker/optimalpowertimecalculator
         tags: |
           type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
     - name: Docker Login
     # You may pin to the exact commit or the version.
     # uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
