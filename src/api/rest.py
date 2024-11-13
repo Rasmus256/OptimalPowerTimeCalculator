@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import asyncio
 import requests
 from datetime import datetime, timedelta, date, timezone
@@ -54,7 +54,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
     if priceClass is None:
         priceClass = os.getenv('PRICE_CLASS')
     if not (priceClass == 'DK1' or priceClass == 'DK2'):
-        return {'errorCode': "INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'"}
+        raise HTTPException(status_code=500, detail="INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'")
 
     hoursString = numHoursToForecast.split('h')[0]
     minuteString = numHoursToForecast.split('h')[1].split('m')[0]
