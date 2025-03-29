@@ -24,18 +24,18 @@ class EnergyPrice:
     def __str__(self):
         return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
 
-def getFuturePrices(price_class):
+def getFuturePrices(cache_key):
     global cachedPrices
     today = date.today()
     tomorrow = today + timedelta(days=1)
-    if not str(price_class)+"_"+today.strftime('%m/%d/%Y') in cachedPrices:
-      cachedPrices[str(price_class)+"_"+today.strftime('%m/%d/%Y')]= getprices(today, price_class)
-    if (not str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y') in cachedPrices) or (not cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')]):
-      cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')]= getprices(tomorrow, price_class)
+    if not str(cache_key)+"_"+today.strftime('%m/%d/%Y') in cachedPrices:
+      cachedPrices[str(cache_key)+"_"+today.strftime('%m/%d/%Y')]= getprices(today, cache_key)
+    if (not str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y') in cachedPrices) or (not cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')]):
+      cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')]= getprices(tomorrow, cache_key)
 
     FuturePrices = []
-    FuturePrices.extend(cachedPrices[str(price_class)+"_"+today.strftime('%m/%d/%Y')])
-    FuturePrices.extend(cachedPrices[str(price_class)+"_"+tomorrow.strftime('%m/%d/%Y')])
+    FuturePrices.extend(cachedPrices[str(cache_key)+"_"+today.strftime('%m/%d/%Y')])
+    FuturePrices.extend(cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')])
     return [e for e in FuturePrices if e.toTs >= datetime.now(timezone.utc)]
 
 def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
@@ -54,11 +54,11 @@ def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
 
 
 @app.get("/api/next-optimal-hour")
-async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', priceClass= None):
-    if priceClass is None:
-        priceClass = os.getenv('PRICE_CLASS')
-    if not (priceClass == 'DK1' or priceClass == 'DK2'):
-        raise HTTPException(status_code=500, detail="INVALID PRICE CLASS. EITHER SET IT TO 'DK1' or 'DK2'")
+async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', glnNumber= None):
+    if glnNumber is None:
+        glnNumber = os.getenv('GLN_NUMBER')
+    if glnNumber is None or glnNumber == '':
+        raise HTTPException(status_code=500, detail="INVALID GLNNUMBER. EITHER SET IT TO VIA ENV OR PROVIDE AS PARAMETER")
 
     hoursString = numHoursToForecast.split('h')[0]
     minuteString = numHoursToForecast.split('h')[1].split('m')[0]
@@ -68,7 +68,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
     if numMinutesInt > 0:
         hoursToForecastInclPartial+=1
 
-    FuturePrices = getFuturePrices(priceClass)
+    FuturePrices = getFuturePrices(glnNumber)
     startIdx, endIdx = determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices)
     print(startIdx)
     print(endIdx)
@@ -103,7 +103,7 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
     startTs = datetime.fromtimestamp(startTs.timestamp(), tz=timezone.utc)
     endTs =   datetime.fromtimestamp(endTs.timestamp(), tz=timezone.utc)
-    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))}, 'credits': '<p>Elpriser leveret af <a href="https://www.elprisenligenu.dk">Elprisen lige nu.dk</a></p>'}
+    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))}, 'credits': '<p>Elpriser leveret af <a href="www.http://elprisen.somjson.dk/">Elprisen som json.dk</a></p>'}
 
 def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
     numberOfMinutesLeftInCurrentHour = 60 - datetime.today().minute
@@ -124,8 +124,8 @@ def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
     
     
 
-def getprices(dateToFind, price_class):
-    url = f'https://elprisen.somjson.dk/elpris?GLN_Number=5790000392261&start={dateToFind.year}-{dateToFind.month:02d}-{dateToFind.day:02d}'
+def getprices(dateToFind, gln_number):
+    url = f'https://elprisen.somjson.dk/elpris?GLN_Number={gln_number}&start={dateToFind.year}-{dateToFind.month:02d}-{dateToFind.day:02d}'
     string_json = requests.get(url)
     if(string_json.status_code == 200):
         contents = json.loads(string_json.content)
