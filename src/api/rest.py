@@ -19,7 +19,7 @@ class EnergyPrice:
         self.price = price
     def __init__(self, fromTs, price):
         self.fromTs = datetime.fromisoformat(fromTs)
-        self.toTs = self.fromTsz + timedelta(hours=1)
+        self.toTs = self.fromTs + timedelta(hours=1)
         self.price = price
     def __str__(self):
         return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
