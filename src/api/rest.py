@@ -130,7 +130,7 @@ def getprices(dateToFind, price_class):
     if(string_json.status_code == 200):
         contents = json.loads(string_json.content)
         contents = contents['records']
-        possibleDates = [EnergyPrice(e['HourUTC'],e['Total']) for e in contents]
+        possibleDates = [EnergyPrice(e['HourUTC']+'Z',e['Total']) for e in contents]
         return possibleDates
     else:
         print(f"Unable to fetch energy prices for {str(dateToFind)}. Got statuscode {string_json.status_code}")
