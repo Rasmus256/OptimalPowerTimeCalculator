@@ -17,6 +17,10 @@ class EnergyPrice:
         self.fromTs = datetime.fromisoformat(fromTs)
         self.toTs = datetime.fromisoformat(toTs)
         self.price = price
+    def __init__(self, fromTs, price):
+        self.fromTs = datetime.fromisoformat(fromTs)
+        self.toTs = datetime + timedelta(hours=1)
+        self.price = price
     def __str__(self):
         return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
 
@@ -121,11 +125,12 @@ def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
     
 
 def getprices(dateToFind, price_class):
-    url = f'https://www.elprisenligenu.dk/api/v1/prices/{dateToFind.year}/{dateToFind.month:02d}-{dateToFind.day:02d}_{price_class}.json'
+    url = f'https://elprisen.somjson.dk/elpris?GLN_Number=5790000392261&start={dateToFind.year}-{dateToFind.month:02d}-{dateToFind.day:02d}'
     string_json = requests.get(url)
     if(string_json.status_code == 200):
         contents = json.loads(string_json.content)
-        possibleDates = [EnergyPrice(e['time_start'],e['time_end'],e['DKK_per_kWh']) for e in contents]
+        contents = contents['records']
+        possibleDates = [EnergyPrice(e['HourUTC'],e['Total']) for e in contents]
         return possibleDates
     else:
         print(f"Unable to fetch energy prices for {str(dateToFind)}. Got statuscode {string_json.status_code}")
