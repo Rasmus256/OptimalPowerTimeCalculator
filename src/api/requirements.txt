@@ -3,3 +3,8 @@ uvicorn ==0.38.0
 cachetools ==6.2.1
 requests
 pytz
+pytest
+pytest-asyncio
+httpx
+pytest-mock
+freezegun
