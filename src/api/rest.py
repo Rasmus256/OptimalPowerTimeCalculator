@@ -119,10 +119,8 @@ def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
             totalPrice += FuturePrices[i].price * numberOfMinutes / 60
             numberOfMinutes = 0
             i+=1
-    return totalPrice        
-    
-    
-    
+    return totalPrice
+
 
 def getprices(dateToFind, gln_number):
     url = f'https://elprisen.somjson.dk/elpris?GLN_Number={gln_number}&start={dateToFind.year}-{dateToFind.month:02d}-{dateToFind.day:02d}'
