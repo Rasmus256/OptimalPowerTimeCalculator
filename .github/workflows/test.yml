@@ -16,10 +16,12 @@ jobs:
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-
-    - name: Build Docker image
-      run: |
-        docker build -f src/api/Dockerfile -t optimal-power-calculator .
+    - uses: docker/build-push-action@v6
+      with:
+        file: src/api/Dockerfile
+        context: src
+        push: false
+        platforms: linux/amd64,linux/arm64
 
     - name: Run tests in Docker
       run: |
