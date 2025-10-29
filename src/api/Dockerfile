@@ -2,10 +2,10 @@
 FROM python:3.14-slim AS builder
 WORKDIR /app
 # Install and build everything here
-COPY /src/api/requirements.txt .
+COPY /api/requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY src/api/ .
+COPY api/ .
 
 FROM python:3.14.0-slim AS test
 # Copy only what's needed for production
