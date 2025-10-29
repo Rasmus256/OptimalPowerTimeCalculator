@@ -2,7 +2,7 @@
 FROM python:3.14-slim AS builder
 WORKDIR /app
 # Install and build everything here
-COPY src/api/requirements.txt .
+COPY /src/api/requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY src/api/ .
