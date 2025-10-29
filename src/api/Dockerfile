@@ -1,7 +1,6 @@
 FROM python:3.14.0-slim AS test
 
-COPY main.py .
-COPY ./api/tests ./api/tests
+COPY ./api ./api
 COPY requirements.txt .
 
 RUN pip install -r ./requirements.txt
