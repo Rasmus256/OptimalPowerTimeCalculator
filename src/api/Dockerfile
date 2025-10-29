@@ -4,7 +4,7 @@ COPY ./api ./api
 
 RUN pip install -r ./api/requirements.txt
 
-RUN python -m pytest ./api/tests/ -v
+RUN python -m pytest ./api/tests/ -v --tb=short --disable-warnings
 
 RUN echo "TEST PASSED! HURRAY!"
 
