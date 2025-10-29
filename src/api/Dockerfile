@@ -16,6 +16,6 @@ CMD ["python", "-m", "pytest", "./tests/"]
 FROM python:3.14.0-slim AS runtime
 WORKDIR /app
 
-COPY --from=builder /app .
+COPY --from=test /app .
 
 CMD ["uvicorn", "rest:app", "--host", "0.0.0.0", "--port", "80"]
