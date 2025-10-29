@@ -3,17 +3,15 @@ FROM python:3.14-slim AS builder
 WORKDIR /app
 # Install and build everything here
 COPY /api/requirements.txt .
-RUN pip install -r requirements.txt
 
 COPY api/ .
+CMD ["pip" "install" "-r" "requirements.txt"]
 
 FROM python:3.14.0-slim AS test
 WORKDIR /app
 COPY --from=builder /app .
 
-RUN python -m pytest ./tests/ -v
-
-RUN echo "TEST PASSED! HURRAY!"
+CMD ["python", "-m", "pytest", "./tests/"]
 
 FROM python:3.14.0-slim AS runtime
 WORKDIR /app
