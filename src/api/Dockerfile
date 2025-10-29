@@ -5,13 +5,13 @@ WORKDIR /app
 COPY /api/requirements.txt .
 
 COPY api/ .
-CMD ["pip" "install" "-r" "requirements.txt"]
+CMD pip install -r requirements.txt
 
 FROM python:3.14.0-slim AS test
 WORKDIR /app
 COPY --from=builder /app .
 
-CMD ["python", "-m", "pytest", "./tests/"]
+RUN python -m pytest ./tests/
 
 FROM python:3.14.0-slim AS runtime
 WORKDIR /app
