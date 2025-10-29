@@ -1,10 +1,7 @@
-FROM python:3.14.0-slim
+FROM  python:3.14.0-slim
 
-WORKDIR /app
+COPY api/ ./api
 
-COPY src/api/requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install -r ./api/requirements.txt
 
-COPY src/api/ .
-
-CMD ["uvicorn", "rest:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "api.rest:app", "--host", "0.0.0.0", "--port", "80"]
