@@ -38,6 +38,47 @@ def getFuturePrices(cache_key):
     FuturePrices.extend(cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')])
     return [e for e in FuturePrices if e.toTs >= datetime.now(timezone.utc)]
 
+
+def parse_max_start_time(max_start_time: str) -> datetime:
+    try:
+        max_start_dt = datetime.fromisoformat(max_start_time.replace('Z', '+00:00'))
+        if max_start_dt.tzinfo is None:
+            max_start_dt = max_start_dt.replace(tzinfo=timezone.utc)
+        else:
+            max_start_dt = max_start_dt.astimezone(timezone.utc)
+
+        now = datetime.now(timezone.utc)
+        if max_start_dt < now:
+            raise HTTPException(
+                status_code=400,
+                detail="max_start_time must be in the future"
+            )
+        return max_start_dt
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid max_start_time format. Expected ISO format: {str(e)}"
+        )
+
+
+def filter_prices_by_max_start_time(
+    future_prices: list,
+    max_start_dt: datetime,
+    hours_to_forecast_incl_partial: int
+) -> list:
+    filtered_prices = [
+        price for price in future_prices
+        if price.fromTs <= max_start_dt
+    ]
+
+    if len(filtered_prices) < hours_to_forecast_incl_partial:
+        raise HTTPException(
+            status_code=400,
+            detail="Not enough available prices before max_start_time to accommodate the requested duration"
+        )
+    return filtered_prices
+
+
 def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
     startIdx = 0
     endIdx = 0
@@ -54,7 +95,7 @@ def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
 
 
 @app.get("/api/next-optimal-hour")
-async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', glnNumber= None):
+async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m', glnNumber= None, max_start_time: str | None = None):
     if glnNumber is None:
         glnNumber = os.getenv('GLN_NUMBER')
     if glnNumber is None or glnNumber == '':
@@ -69,6 +110,13 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         hoursToForecastInclPartial+=1
 
     FuturePrices = getFuturePrices(glnNumber)
+    max_start_dt = None
+
+    if max_start_time is not None:
+        max_start_dt = parse_max_start_time(max_start_time)
+        FuturePrices = filter_prices_by_max_start_time(
+            FuturePrices, max_start_dt, hoursToForecastInclPartial)
+
     startIdx, endIdx = determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices)
     print(startIdx)
     print(endIdx)
@@ -103,6 +151,14 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
     startTs = datetime.fromtimestamp(startTs.timestamp(), tz=timezone.utc)
     endTs =   datetime.fromtimestamp(endTs.timestamp(), tz=timezone.utc)
+
+    if max_start_time is not None:
+        if startTs > max_start_dt:
+            raise HTTPException(
+                status_code=400,
+                detail="Calculated optimal start time exceeds max_start_time constraint"
+            )
+
     return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))}, 'credits': '<p>Elpriser leveret af <a href="www.http://elprisen.somjson.dk/">Elprisen som json.dk</a></p>'}
 
 def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
