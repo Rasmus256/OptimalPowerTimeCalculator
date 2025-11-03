@@ -1,25 +1,31 @@
-import pytest
 import json
-from unittest.mock import patch, MagicMock
-from datetime import datetime, timedelta, date, timezone
 import os
+from datetime import UTC, date, datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 try:
     from fastapi.testclient import TestClient
+
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
 
 try:
     from freezegun import freeze_time
+
     FREEZEGUN_AVAILABLE = True
 except ImportError:
     FREEZEGUN_AVAILABLE = False
 
 from rest import (
-    EnergyPrice, getprices, getFuturePrices,
-    determineLongestConsequtiveHours, getTotalCostIfImpatient,
-    cachedPrices
+    EnergyPrice,
+    cachedPrices,
+    determineLongestConsequtiveHours,
+    getFuturePrices,
+    getprices,
+    getTotalCostIfImpatient,
 )
 
 if FASTAPI_AVAILABLE:
@@ -43,7 +49,7 @@ def sample_energy_data():
             "gln_Number": "5790000611003",
             "gridCompanyNumber": "344",
             "name": "N1 A/S",
-            "priceArea": "DK1"
+            "priceArea": "DK1",
         },
         "records": [
             {
@@ -57,7 +63,7 @@ def sample_energy_data():
                 "NetselskabTarif": 0.0867,
                 "SpotPrice": 0.135905733,
                 "Total": 0.5,
-                "TotalExMoms": 0.4
+                "TotalExMoms": 0.4,
             },
             {
                 "CO2Emission": 136.5,
@@ -70,7 +76,7 @@ def sample_energy_data():
                 "NetselskabTarif": 0.0867,
                 "SpotPrice": 0.073461549,
                 "Total": 0.3,
-                "TotalExMoms": 0.24
+                "TotalExMoms": 0.24,
             },
             {
                 "CO2Emission": 160.17,
@@ -83,7 +89,7 @@ def sample_energy_data():
                 "NetselskabTarif": 0.0867,
                 "SpotPrice": 0.0489805905,
                 "Total": 0.7,
-                "TotalExMoms": 0.56
+                "TotalExMoms": 0.56,
             },
             {
                 "CO2Emission": 174.25,
@@ -96,9 +102,9 @@ def sample_energy_data():
                 "NetselskabTarif": 0.0867,
                 "SpotPrice": 0.0269832075,
                 "Total": 0.4,
-                "TotalExMoms": 0.32
-            }
-        ]
+                "TotalExMoms": 0.32,
+            },
+        ],
     }
 
 
@@ -109,7 +115,7 @@ def sample_energy_prices():
         EnergyPrice("2024-01-15T12:00:00Z", 0.5),
         EnergyPrice("2024-01-15T13:00:00Z", 0.3),
         EnergyPrice("2024-01-15T14:00:00Z", 0.7),
-        EnergyPrice("2024-01-15T15:00:00Z", 0.4)
+        EnergyPrice("2024-01-15T15:00:00Z", 0.4),
     ]
 
 
@@ -234,13 +240,13 @@ class TestGetFuturePrices:
         gln_number = "123456789"
 
         # First call should fetch both today and tomorrow
-        result = getFuturePrices(gln_number)
+        getFuturePrices(gln_number)
 
         # Should be called twice (today and tomorrow)
         assert mock_getprices.call_count == 2
 
         # Second call should use cache
-        result2 = getFuturePrices(gln_number)
+        getFuturePrices(gln_number)
         assert mock_getprices.call_count == 2  # No additional calls
 
         # Verify cache keys
@@ -255,7 +261,7 @@ class TestGetFuturePrices:
     def test_filtering_past_prices(self, mock_datetime, mock_getprices):
         """Test that past prices are filtered out."""
         # Mock datetime.now to return a fixed time
-        mock_now = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+        mock_now = datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
         mock_datetime.now.return_value = mock_now
         mock_datetime.fromisoformat = datetime.fromisoformat
 

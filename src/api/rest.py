@@ -1,10 +1,9 @@
-from fastapi import FastAPI, HTTPException
-import asyncio
-import requests
-from datetime import datetime, timedelta, date, timezone
 import json
-import pytz
 import os
+from datetime import UTC, date, datetime, timedelta
+
+import requests
+from fastapi import FastAPI, HTTPException
 
 today = date.today()
 
@@ -13,10 +12,6 @@ app = FastAPI()
 cachedPrices = {}
 
 class EnergyPrice:
-    def __init__(self, fromTs, toTs, price):
-        self.fromTs = datetime.fromisoformat(fromTs)
-        self.toTs = datetime.fromisoformat(toTs)
-        self.price = price
     def __init__(self, fromTs, price):
         self.fromTs = datetime.fromisoformat(fromTs)
         self.toTs = self.fromTs + timedelta(hours=1)
@@ -28,15 +23,15 @@ def getFuturePrices(cache_key):
     global cachedPrices
     today = date.today()
     tomorrow = today + timedelta(days=1)
-    if not str(cache_key)+"_"+today.strftime('%m/%d/%Y') in cachedPrices:
+    if str(cache_key)+"_"+today.strftime('%m/%d/%Y') not in cachedPrices:
       cachedPrices[str(cache_key)+"_"+today.strftime('%m/%d/%Y')]= getprices(today, cache_key)
-    if (not str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y') in cachedPrices) or (not cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')]):
+    if (str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y') not in cachedPrices) or (not cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')]):
       cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')]= getprices(tomorrow, cache_key)
 
     FuturePrices = []
     FuturePrices.extend(cachedPrices[str(cache_key)+"_"+today.strftime('%m/%d/%Y')])
     FuturePrices.extend(cachedPrices[str(cache_key)+"_"+tomorrow.strftime('%m/%d/%Y')])
-    return [e for e in FuturePrices if e.toTs >= datetime.now(timezone.utc)]
+    return [e for e in FuturePrices if e.toTs >= datetime.now(UTC)]
 
 def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
     startIdx = 0
@@ -101,9 +96,14 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         endTs =   max([e.toTs   for e in fullHours])
         price = sum([e.price for e in fullHours]) / len(fullHours)
         priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
-    startTs = datetime.fromtimestamp(startTs.timestamp(), tz=timezone.utc)
-    endTs =   datetime.fromtimestamp(endTs.timestamp(), tz=timezone.utc)
-    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))}, 'credits': '<p>Elpriser leveret af <a href="www.http://elprisen.somjson.dk/">Elprisen som json.dk</a></p>'}
+    startTs = datetime.fromtimestamp(startTs.timestamp(), tz=UTC)
+    endTs =   datetime.fromtimestamp(endTs.timestamp(), tz=UTC)
+    return {'price' : {
+        'fromTs': startTs,
+        'toTs': endTs,
+        'price': price,
+        'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))},
+        'credits': '<p>Elpriser leveret af <a href="www.http://elprisen.somjson.dk/">Elprisen som json.dk</a></p>'}
 
 def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):
     numberOfMinutesLeftInCurrentHour = 60 - datetime.today().minute
