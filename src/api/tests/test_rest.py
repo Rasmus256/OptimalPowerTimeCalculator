@@ -374,8 +374,8 @@ class TestAPIEndpoints:
 
         # Check that timestamps are valid ISO format
         from datetime import datetime
-        from_ts = datetime.fromisoformat(price_data['fromTs'].replace('Z', '+00:00'))
-        to_ts = datetime.fromisoformat(price_data['toTs'].replace('Z', '+00:00'))
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        to_ts = datetime.fromisoformat(price_data['toTs'])
 
         # Should be a 2-hour window
         duration = to_ts - from_ts
@@ -416,8 +416,8 @@ class TestAPIEndpoints:
 
         # Check that timestamps are valid ISO format
         from datetime import datetime
-        from_ts = datetime.fromisoformat(price_data['fromTs'].replace('Z', '+00:00'))
-        to_ts = datetime.fromisoformat(price_data['toTs'].replace('Z', '+00:00'))
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        to_ts = datetime.fromisoformat(price_data['toTs'])
 
         # Should be 1.5 hours (90 minutes)
         duration = to_ts - from_ts
@@ -458,8 +458,8 @@ class TestAPIEndpoints:
 
         # Check that timestamps are valid ISO format
         from datetime import datetime
-        from_ts = datetime.fromisoformat(price_data['fromTs'].replace('Z', '+00:00'))
-        to_ts = datetime.fromisoformat(price_data['toTs'].replace('Z', '+00:00'))
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        to_ts = datetime.fromisoformat(price_data['toTs'])
 
         # Should be exactly 1 hour
         duration = to_ts - from_ts
@@ -485,8 +485,8 @@ class TestAPIEndpoints:
 
         # Should be exactly 30 minutes
         price_data = data['price']
-        from_ts = datetime.fromisoformat(price_data['fromTs'].replace('Z', '+00:00'))
-        to_ts = datetime.fromisoformat(price_data['toTs'].replace('Z', '+00:00'))
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        to_ts = datetime.fromisoformat(price_data['toTs'])
         duration = to_ts - from_ts
         assert duration.total_seconds() == 1800  # 30 minutes in seconds
 
@@ -498,8 +498,8 @@ class TestAPIEndpoints:
 
         # Should be exactly 3 hours
         price_data = data['price']
-        from_ts = datetime.fromisoformat(price_data['fromTs'].replace('Z', '+00:00'))
-        to_ts = datetime.fromisoformat(price_data['toTs'].replace('Z', '+00:00'))
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        to_ts = datetime.fromisoformat(price_data['toTs'])
         duration = to_ts - from_ts
         assert duration.total_seconds() == 10800  # 3 hours in seconds
 
@@ -509,3 +509,86 @@ class TestAPIEndpoints:
 
         assert response.status_code == 204
         assert response.content == b''
+
+    @freeze_time("2024-01-15T11:00:00Z")
+    @patch('rest.getFuturePrices')
+    def test_max_start_time_constrains_result(self, mock_future, client, sample_energy_prices):
+        """Test that max_start_time successfully constrains the optimal start time."""
+        mock_future.return_value = sample_energy_prices
+
+        max_start = "2024-01-15T13:00:00Z"
+        response = client.get(
+            f"/api/next-optimal-hour?numHoursToForecast=1h0m&glnNumber=5790000611003&max_start_time={max_start}"
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        price_data = data['price']
+
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        max_start_dt = datetime.fromisoformat(max_start)
+
+        assert from_ts <= max_start_dt
+        assert from_ts == datetime.fromisoformat("2024-01-15T13:00:00Z")
+
+    @freeze_time("2024-01-15T11:00:00Z")
+    @patch('rest.getFuturePrices')
+    def test_max_start_time_too_early(self, mock_future, client, sample_energy_prices):
+        """Test that max_start_time that is too early returns an error."""
+        mock_future.return_value = sample_energy_prices
+
+        max_start = "2024-01-15T11:30:00Z"
+        response = client.get(
+            f"/api/next-optimal-hour?numHoursToForecast=2h0m&glnNumber=5790000611003&max_start_time={max_start}"
+        )
+
+        assert response.status_code == 400
+        assert "Not enough available prices" in response.json()["detail"]
+
+    @freeze_time("2024-01-15T11:00:00Z")
+    @patch('rest.getFuturePrices')
+    def test_max_start_time_in_past(self, mock_future, client, sample_energy_prices):
+        """Test that max_start_time in the past returns an error."""
+        mock_future.return_value = sample_energy_prices
+
+        max_start = "2024-01-15T10:00:00Z"
+        response = client.get(
+            f"/api/next-optimal-hour?numHoursToForecast=1h0m&glnNumber=5790000611003&max_start_time={max_start}"
+        )
+
+        assert response.status_code == 400
+        assert "must be in the future" in response.json()["detail"]
+
+    @freeze_time("2024-01-15T11:00:00Z")
+    @patch('rest.getFuturePrices')
+    def test_max_start_time_invalid_format(self, mock_future, client, sample_energy_prices):
+        """Test that invalid max_start_time format returns an error."""
+        mock_future.return_value = sample_energy_prices
+
+        max_start = "invalid-date"
+        response = client.get(
+            f"/api/next-optimal-hour?numHoursToForecast=1h0m&glnNumber=5790000611003&max_start_time={max_start}"
+        )
+
+        assert response.status_code == 400
+        assert "Invalid max_start_time format" in response.json()["detail"]
+
+    @freeze_time("2024-01-15T11:00:00Z")
+    @patch('rest.getFuturePrices')
+    def test_max_start_time_with_partial_hours(self, mock_future, client, sample_energy_prices):
+        """Test max_start_time with partial hours."""
+        mock_future.return_value = sample_energy_prices
+
+        max_start = "2024-01-15T13:30:00Z"
+        response = client.get(
+            f"/api/next-optimal-hour?numHoursToForecast=1h30m&glnNumber=5790000611003&max_start_time={max_start}"
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        price_data = data['price']
+
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        max_start_dt = datetime.fromisoformat(max_start)
+
+        assert from_ts <= max_start_dt
