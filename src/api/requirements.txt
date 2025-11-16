@@ -8,3 +8,4 @@ pytest-asyncio
 httpx
 pytest-mock
 freezegun
+ruff
