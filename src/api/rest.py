@@ -38,11 +38,11 @@ def parse_max_start_time(max_start_time: str) -> datetime:
     try:
         max_start_dt = datetime.fromisoformat(max_start_time.replace('Z', '+00:00'))
         if max_start_dt.tzinfo is None:
-            max_start_dt = max_start_dt.replace(tzinfo=timezone.utc)
+            max_start_dt = max_start_dt.replace(tzinfo=UTC)
         else:
-            max_start_dt = max_start_dt.astimezone(timezone.utc)
+            max_start_dt = max_start_dt.astimezone(UTC)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if max_start_dt < now:
             raise HTTPException(
                 status_code=400,
@@ -50,10 +50,10 @@ def parse_max_start_time(max_start_time: str) -> datetime:
             )
         return max_start_dt
     except ValueError as e:
-        raise HTTPException(
+        raise HTTPException (
             status_code=400,
             detail=f"Invalid max_start_time format. Expected ISO format: {str(e)}"
-        )
+        ) from e
 
 
 def filter_prices_by_max_start_time(
@@ -145,8 +145,8 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
         price = sum([e.price for e in fullHours]) / len(fullHours)
         priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
 
-    startTs = datetime.fromtimestamp(startTs.timestamp(), tz=timezone.utc)
-    endTs =   datetime.fromtimestamp(endTs.timestamp(), tz=timezone.utc)
+    startTs = datetime.fromtimestamp(startTs.timestamp(), tz=UTC)
+    endTs =   datetime.fromtimestamp(endTs.timestamp(), tz=UTC)
 
     if max_start_time is not None:
         if startTs > max_start_dt:
@@ -155,7 +155,9 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
                 detail="Calculated optimal start time exceeds max_start_time constraint"
             )
 
-    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price, 'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))}, 'credits': '<p>Elpriser leveret af <a href="www.http://elprisen.somjson.dk/">Elprisen som json.dk</a></p>'}
+    return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price,
+    'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))},
+    'credits': '<p>Elpriser leveret af <a href="www.http://elprisen.somjson.dk/">Elprisen som json.dk</a></p>'}
 
 
 def getTotalCostIfImpatient(FuturePrices, numberOfMinutes):

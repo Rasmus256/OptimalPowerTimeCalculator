@@ -22,5 +22,6 @@ WORKDIR /app
 
 COPY --from=test /app .
 COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 CMD ["uvicorn", "rest:app", "--host", "0.0.0.0", "--port", "80"]
