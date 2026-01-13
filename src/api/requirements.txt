@@ -1,5 +1,5 @@
 fastapi ==0.128.0
-uvicorn ==0.38.0
+uvicorn ==0.40.0
 cachetools ==6.2.4
 requests
 pytz
