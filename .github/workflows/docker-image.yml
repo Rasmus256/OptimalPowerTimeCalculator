@@ -45,8 +45,8 @@ jobs:
       env:
         DSLIM_HTTP_PROBE: false
       with:
-        target: rasmus256docker/optimalpowertimecalculator:latest
+        target: ${{ github.repository }}:latest
         tag: "slim"
 
     # Push to the registry
-    - run: docker image push "rasmus256docker/optimalpowertimecalculator" --all-tags
+    - run: docker image push "${{ github.repository }}:latest" --all-tags
