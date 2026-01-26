@@ -38,6 +38,15 @@ jobs:
       with:
         file: src/api/Dockerfile
         context: src
-        push: true
+        push: false
         platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
+    - uses: kitabisa/docker-slim-action@v1.2.0
+      env:
+        DSLIM_HTTP_PROBE: false
+      with:
+        target: rasmus256docker/optimalpowertimecalculator:latest
+        tag: "slim"
+
+    # Push to the registry
+    - run: docker image push "rasmus256docker/optimalpowertimecalculator" --all-tags
