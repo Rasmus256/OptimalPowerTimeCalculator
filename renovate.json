@@ -1,13 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base","group:allNonMajor"
+    "config:recommended",
+    "group:allNonMajor"
   ],
-    "packageRules": [
+  "packageRules": [
     {
-      "matchPaths": ["**/*"],
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchFileNames": [
+        "**/*"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
       "automerge": true
     }
-    ]
+  ]
 }
