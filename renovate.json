@@ -3,19 +3,5 @@
   "extends": [
     "config:recommended",
     "group:allNonMajor"
-  ],
-  "packageRules": [
-    {
-      "matchFileNames": [
-        "**/*"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest"
-      ],
-      "automerge": true
-    }
   ]
 }
