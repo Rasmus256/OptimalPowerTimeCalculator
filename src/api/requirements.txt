@@ -1,6 +1,6 @@
 fastapi ==0.135.1
 uvicorn ==0.41.0
-cachetools ==7.0.2
+cachetools ==7.0.4
 requests
 pytz
 pytest
