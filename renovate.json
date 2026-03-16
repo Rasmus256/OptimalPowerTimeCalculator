@@ -1,17 +1,6 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    "group:allNonMajor"
-  ],
-  "packageRules": [
-    {
-      "matchManagers": ["github-actions"],
-      "matchDatasources": ["github-tags"],
-      "matchPackageNames": ["/^docker\\/.+/"],
-      "automerge": true,
-      "automergeType": "pr",
-      "automergeStrategy": "squash"
-    }
+    "github>rasmus256/renovatebotConfigs#v1.0.0",
+    "github>rasmus256/renovatebotConfigs:github-actions#v1.0.0"
   ]
 }
