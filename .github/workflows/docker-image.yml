@@ -22,7 +22,7 @@ jobs:
       uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
+      uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4
     - name: Docker Login
     # You may pin to the exact commit or the version.
     # uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
