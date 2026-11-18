@@ -56,36 +56,45 @@ def parse_max_start_time(max_start_time: str) -> datetime:
         ) from e
 
 
-def filter_prices_by_max_start_time(
-    future_prices: list,
-    max_start_dt: datetime,
-    hours_to_forecast_incl_partial: int
-) -> list:
-    filtered_prices = [
-        price for price in future_prices
-        if price.fromTs <= max_start_dt
-    ]
-
-    if len(filtered_prices) < hours_to_forecast_incl_partial:
-        raise HTTPException(
-            status_code=400,
-            detail="Not enough available prices before max_start_time to accommodate the requested duration"
-        )
-    return filtered_prices
+def window_start_ts(
+    prices: list[EnergyPrice],
+    start_idx: int,
+    end_idx: int,
+    partial_minutes: int,
+) -> datetime:
+    if partial_minutes > 0 and prices[start_idx].price > prices[end_idx].price:
+        return prices[start_idx].toTs - timedelta(minutes=partial_minutes)
+    return min(price.fromTs for price in prices[start_idx:end_idx + 1])
 
 
-def determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices):
+def determineLongestConsequtiveHours(
+    hoursToForecastInclPartial: int,
+    FuturePrices: list[EnergyPrice],
+    max_start_dt: datetime | None = None,
+    partial_minutes: int = 0,
+) -> tuple[int, int] | None:
     startIdx = 0
     endIdx = 0
     min_sum = float('inf')
+    found = False
     for i in range(len(FuturePrices)-(hoursToForecastInclPartial-1)):
+        end = i + hoursToForecastInclPartial - 1
+        if max_start_dt is not None:
+            start_ts = window_start_ts(FuturePrices, i, end, partial_minutes)
+            if start_ts > max_start_dt:
+                continue
         window_sum = 0
         for j in range(hoursToForecastInclPartial):
             window_sum += FuturePrices[i+j].price
         if window_sum < min_sum:
             min_sum = window_sum
             startIdx = i
-            endIdx = i+hoursToForecastInclPartial-1
+            endIdx = end
+            found = True
+    if not found:
+        if max_start_dt is None:
+            return 0, 0
+        return None
     return startIdx, endIdx
 
 
@@ -109,27 +118,37 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
 
     if max_start_time is not None:
         max_start_dt = parse_max_start_time(max_start_time)
-        FuturePrices = filter_prices_by_max_start_time(
-            FuturePrices, max_start_dt, hoursToForecastInclPartial)
 
-    startIdx, endIdx = determineLongestConsequtiveHours(hoursToForecastInclPartial, FuturePrices)
+    optimal = determineLongestConsequtiveHours(
+        hoursToForecastInclPartial,
+        FuturePrices,
+        max_start_dt,
+        numMinutesInt,
+    )
+    if optimal is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Not enough available prices before max_start_time to accommodate the requested duration"
+        )
+    startIdx, endIdx = optimal
     print(startIdx)
     print(endIdx)
     #Were we asked to forecast a partial hour? If so, either attach this partial hour to the beginning or the end - depending on price.
     price = 0
     if numMinutesInt>0:
         allHours = FuturePrices[startIdx:endIdx+1]
+        startTs = window_start_ts(
+            FuturePrices, startIdx, endIdx, numMinutesInt
+        )
         if FuturePrices[startIdx].price <= FuturePrices[endIdx].price:
             print(f'First hour is the least expensive. Using this as a full hour and taking partial from the end {allHours[-1]}')
             fullHours = allHours[:-1]
             partialHour = allHours[-1]
-            startTs = min([e.fromTs for e in allHours])
             endTs = partialHour.fromTs + timedelta(minutes=numMinutesInt)
         else:
             print(f'Last hour is the least expensive. Using this as a full hour and taking partial hour from the first {allHours[0]}')
             fullHours = allHours[1:]
             partialHour = allHours[0]
-            startTs = partialHour.toTs - timedelta(minutes=numMinutesInt)
             endTs = max([e.toTs for e in allHours])
 
         partialPriceSum = sum([fullHour.price for fullHour in fullHours])
@@ -140,20 +159,13 @@ async def get_most_optimal_start_and_end_for_duration(numHoursToForecast = '1h1m
     else:
         print(f"asked to present full hours only. Looking between these hours: {FuturePrices[startIdx]} and {FuturePrices[endIdx]}")
         fullHours = FuturePrices[startIdx:endIdx+1]
-        startTs = min([e.fromTs for e in fullHours])
+        startTs = window_start_ts(FuturePrices, startIdx, endIdx, 0)
         endTs =   max([e.toTs   for e in fullHours])
         price = sum([e.price for e in fullHours]) / len(fullHours)
         priceIfImpatient = getTotalCostIfImpatient(FuturePrices,  numHoursInt*60+numMinutesInt)
 
     startTs = datetime.fromtimestamp(startTs.timestamp(), tz=UTC)
     endTs =   datetime.fromtimestamp(endTs.timestamp(), tz=UTC)
-
-    if max_start_time is not None:
-        if startTs > max_start_dt:
-            raise HTTPException(
-                status_code=400,
-                detail="Calculated optimal start time exceeds max_start_time constraint"
-            )
 
     return {'price' : {'fromTs': startTs, 'toTs': endTs, 'price': price,
     'suboptimalPriceMultiplier': priceIfImpatient*60/(price*(numHoursInt*60+numMinutesInt))},
