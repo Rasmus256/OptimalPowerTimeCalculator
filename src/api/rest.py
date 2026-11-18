@@ -19,9 +19,9 @@ class EnergyPrice:
     def __str__(self):
         return str(self.fromTs) + " " + str(self.toTs) + " " + str(self.price)
 
-def getFuturePrices(cache_key):
+def getFuturePrices(cache_key: str) -> list[EnergyPrice]:
     global cachedPrices
-    today = date.today()
+    today = datetime.now(UTC).date()
     tomorrow = today + timedelta(days=1)
     if str(cache_key)+"_"+today.strftime('%m/%d/%Y') not in cachedPrices:
       cachedPrices[str(cache_key)+"_"+today.strftime('%m/%d/%Y')]= getprices(today, cache_key)
