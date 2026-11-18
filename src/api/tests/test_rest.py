@@ -250,8 +250,9 @@ class TestGetFuturePrices:
         assert mock_getprices.call_count == 2  # No additional calls
 
         # Verify cache keys
-        today_str = date.today().strftime('%m/%d/%Y')
-        tomorrow_str = (date.today() + timedelta(days=1)).strftime('%m/%d/%Y')
+        utc_today = datetime.now(UTC).date()
+        today_str = utc_today.strftime('%m/%d/%Y')
+        tomorrow_str = (utc_today + timedelta(days=1)).strftime('%m/%d/%Y')
 
         assert f"{gln_number}_{today_str}" in cachedPrices
         assert f"{gln_number}_{tomorrow_str}" in cachedPrices
@@ -278,6 +279,22 @@ class TestGetFuturePrices:
 
         # Should only include current and future prices
         assert len(result) >= 2  # At least current and future
+
+    @patch('rest.datetime')
+    @patch('rest.date')
+    @patch('rest.getprices')
+    def test_fetches_utc_date_when_local_date_differs(
+        self, mock_getprices, mock_date, mock_datetime
+    ):
+        """Prices are keyed by UTC, so a server east of UTC must not skip today."""
+        mock_getprices.return_value = []
+        mock_datetime.now.return_value = datetime(2024, 1, 15, 23, 30, tzinfo=UTC)
+        mock_date.today.return_value = date(2024, 1, 16)
+
+        getFuturePrices('123456789')
+
+        called_dates = [call.args[0] for call in mock_getprices.call_args_list]
+        assert called_dates == [date(2024, 1, 15), date(2024, 1, 16)]
 
 
 class TestDetermineLongestConsequtiveHours:
