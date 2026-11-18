@@ -3,50 +3,40 @@ name: Docker Image CI
 on:
   push:
     branches: [ "main" ]
-env:
-  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
 jobs:
   build-api:
     name: build-api
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
       with:
         images: rasmus256docker/optimalpowertimecalculator
         tags: |
+          type=raw,value=latest
           type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
     - name: Docker Login
-    # You may pin to the exact commit or the version.
-    # uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
       uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
       with:
-        # Username used to log against the Docker registry
         username: rasmus256docker
-        # Password or personal access token used to log against the Docker registry
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-
-    - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+    - name: Build and push Docker image
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
       with:
         file: src/api/Dockerfile
         context: src
-        push: false
+        push: true
         platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
-    - uses: kitabisa/docker-slim-action@6a9a64eaf0c08b1251c148514dd70be1495bff12 # v1.2.0
-      env:
-        DSLIM_HTTP_PROBE: false
-      with:
-        target: ${{ github.repository }}:latest
-        tag: "slim"
-
-    # Push to the registry
-    - run: docker image push "${{ github.repository }}:latest" --all-tags
