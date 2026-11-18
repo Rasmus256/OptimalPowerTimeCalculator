@@ -32,7 +32,7 @@ COPY --from=builder /app .
 RUN python -m pytest ./tests/
 RUN python -m ruff check ./
 
-FROM python:3.15-slim AS runtime
+FROM python:3.15 AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
