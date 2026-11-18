@@ -329,6 +329,47 @@ class TestDetermineLongestConsequtiveHours:
         assert start_idx == 0
         assert end_idx == 0
 
+    def test_window_may_extend_past_max_start(self):
+        """A window that starts on time may include later, cheaper hours."""
+        prices = [
+            EnergyPrice("2024-01-15T12:00:00Z", 0.9),
+            EnergyPrice("2024-01-15T13:00:00Z", 0.9),
+            EnergyPrice("2024-01-15T14:00:00Z", 0.2),
+            EnergyPrice("2024-01-15T15:00:00Z", 0.2),
+        ]
+        max_start = datetime.fromisoformat("2024-01-15T13:00:00Z")
+
+        start_idx, end_idx = determineLongestConsequtiveHours(
+            2, prices, max_start, 0
+        )
+
+        assert start_idx == 1
+        assert end_idx == 2
+
+    def test_skips_partial_window_that_starts_too_late(self):
+        """Partial hours can push the real start past max_start_time."""
+        prices = [
+            EnergyPrice("2024-01-15T12:00:00Z", 0.4),
+            EnergyPrice("2024-01-15T13:00:00Z", 0.5),
+            EnergyPrice("2024-01-15T14:00:00Z", 0.1),
+            EnergyPrice("2024-01-15T15:00:00Z", 0.1),
+            EnergyPrice("2024-01-15T16:00:00Z", 0.9),
+        ]
+        max_start = datetime.fromisoformat("2024-01-15T13:10:00Z")
+
+        start_idx, end_idx = determineLongestConsequtiveHours(
+            3, prices, max_start, 40
+        )
+
+        assert start_idx == 0
+        assert end_idx == 2
+
+    def test_returns_none_when_no_window_starts_in_time(self):
+        prices = [EnergyPrice("2024-01-15T12:00:00Z", 0.5)]
+        max_start = datetime.fromisoformat("2024-01-15T11:00:00Z")
+
+        assert determineLongestConsequtiveHours(1, prices, max_start, 0) is None
+
 
 class TestGetTotalCostIfImpatient:
     """Test getTotalCostIfImpatient function."""
@@ -609,3 +650,31 @@ class TestAPIEndpoints:
         max_start_dt = datetime.fromisoformat(max_start)
 
         assert from_ts <= max_start_dt
+
+    @freeze_time("2024-01-15T11:00:00Z")
+    @patch('rest.getFuturePrices')
+    def test_max_start_time_allows_window_to_extend_past_deadline(
+        self, mock_future, client
+    ):
+        """Cheaper hours after max_start_time stay usable when the window starts earlier."""
+        prices = [
+            EnergyPrice("2024-01-15T12:00:00Z", 0.9),
+            EnergyPrice("2024-01-15T13:00:00Z", 0.9),
+            EnergyPrice("2024-01-15T14:00:00Z", 0.2),
+            EnergyPrice("2024-01-15T15:00:00Z", 0.2),
+        ]
+        mock_future.return_value = prices
+
+        max_start = "2024-01-15T13:00:00Z"
+        response = client.get(
+            "/api/next-optimal-hour?numHoursToForecast=2h0m"
+            f"&glnNumber=5790000611003&max_start_time={max_start}"
+        )
+
+        assert response.status_code == 200
+        price_data = response.json()['price']
+        from_ts = datetime.fromisoformat(price_data['fromTs'])
+        to_ts = datetime.fromisoformat(price_data['toTs'])
+        assert from_ts == datetime.fromisoformat("2024-01-15T13:00:00Z")
+        assert to_ts == datetime.fromisoformat("2024-01-15T15:00:00Z")
+        assert abs(price_data['price'] - 0.55) < 0.01
