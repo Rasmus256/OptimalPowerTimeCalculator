@@ -1,27 +1,48 @@
 # Stage 1: Dependencies and Build
 FROM python:3.15-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    VIRTUAL_ENV=/opt/venv
+
+RUN python -m venv "$VIRTUAL_ENV"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 WORKDIR /app
-# Install and build everything here
-COPY /api/requirements.txt .
+
+COPY api/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY api/ .
-RUN pip install -r requirements.txt
 
-FROM python:3.15.0-slim AS test
+FROM python:3.15-slim AS test
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/opt/venv
+
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 WORKDIR /app
-COPY --from=builder /app .
-COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
 
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /app .
 
 RUN python -m pytest ./tests/
 RUN python -m ruff check ./
 
-FROM python:3.15.0-slim AS runtime
+FROM python:3.15-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/opt/venv
+
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
 WORKDIR /app
 
 COPY --from=test /app .
-COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /opt/venv /opt/venv
 
 CMD ["uvicorn", "rest:app", "--host", "0.0.0.0", "--port", "80"]
