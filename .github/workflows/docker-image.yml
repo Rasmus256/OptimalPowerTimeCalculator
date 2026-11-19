@@ -18,7 +18,7 @@ jobs:
         images: rasmus256docker/optimalpowertimecalculator
         tags: |
           type=raw,value=latest
-          type=raw,value={{date 'YYYYMMDD-HHmmss'}}
+          type=raw,value={{date 'YYYYMMDD.HHmmss'}}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
